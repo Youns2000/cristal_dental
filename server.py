@@ -27,6 +27,3 @@ def check():
 
 def run_flask():
     app.run(debug=False, host='127.0.0.1', port=8090)
-
-# print(key_gen())
-run_flask()
