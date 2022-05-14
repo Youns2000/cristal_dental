@@ -1,4 +1,5 @@
 import random
+import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 def key_gen():
@@ -14,11 +15,20 @@ def key_gen():
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path != "/keygen":
+                self.send_response(404)
+                content = "not found"
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content.encode("utf-8"))
+                return
+        
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
         self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
+        with open('json_data.json', 'w') as outfile:
+            json.dump(key_gen(), outfile)
+        self.wfile.write(bytes("<p>Key generated!</p>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
