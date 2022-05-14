@@ -1,17 +1,15 @@
 from multiprocessing import Process
 from threading import Thread
 import server
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import gui
 
 if __name__ == '__main__':
+
+    webServer = HTTPServer(('localhost', 9080), server.HttpHandler)
+    print('running http server: http://localhost:9080')  # some consoles will display URL as clickable so it is easier to run browser
+    t = Thread(target=webServer.serve_forever, daemon=True)
+    t.start()
+    
     Gui = gui.gui()
-
-    # p_gui = Process(target=Gui.gui_main(), args=('bob',))
-    # p_server = Process(target=server.run_flask(), args=('bob',))
-    p_gui = Thread(target=Gui.gui_main())
-    p_server = Thread(target=server.run_flask())
-
-    p_server.start()
-    p_gui.start()
-    p_server.join()
-    p_gui.join()
+    Gui.gui_main()
