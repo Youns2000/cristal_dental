@@ -1,7 +1,9 @@
 import tkinter as tk
+from tkinter import ttk
 from PIL import Image, ImageTk
 import mss
 import mss.tools
+import time
 import os
 import server
 from threading import Thread
@@ -13,6 +15,7 @@ class gui():
         self.root = tk.Tk()
         self.refresh_icon = tk.PhotoImage(file="./refresh.png")
         self.root.title('Polaris-Implants')
+        self.root.minsize(500, 200)
         window_width = 1100
         window_height = 500
         screen_width = self.root.winfo_screenwidth()
@@ -32,7 +35,10 @@ class gui():
         self.buttons_cnv = tk.Canvas(self.root)
         self.buttons_cnv.pack(fill=tk.X, side=tk.BOTTOM)
 
-        self.shot_button = tk.Button(self.buttons_cnv, width=int(self.buttons_cnv.winfo_height()//2), text ="Take a shot", font=("Consolas", 17), command =self.shot)
+        self.root.update()
+
+        # print(self.buttons_cnv.winfo_width())
+        self.shot_button = ttk.Button(self.buttons_cnv,  width=(self.buttons_cnv.winfo_width()//2), text ="Take a shot", command =self.shot)
         self.shot_button.pack(side=tk.LEFT, expand=True)
         
         self.retake_button = tk.Button(self.buttons_cnv, image=self.refresh_icon, width=int(self.buttons_cnv.winfo_height()//2), text ="Retake a shot", command = self.refresh_cnv)
@@ -55,21 +61,18 @@ class gui():
             sct_img = sct.grab(monitor)
             # mss.tools.to_png(sct_img.rgb, sct_img.size, output=CURR_IMG)
             img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-            # image = ImageTk.PhotoImage(img)
-            
+            image = ImageTk.PhotoImage(img)
 
             img.save(self.curr_img)
 
-            if os.path.exists(self.curr_img):
-                print("caca")
-            image = tk.PhotoImage(self.curr_img)
-
             self.shot_area_cnv.create_image(0,0, anchor = tk.NW, image=image)
-            # panel = tk.Label(self.shot_area_cnv, image=image)
-            # panel.pack()
-            # panel.pack(side=tk.TOP, fill=tk.BOTH)
-            self.root.update()
-            # self.root.update_idletasks()
+            self.shot_area_cnv.image = image
+            self.shot_area_cnv.pack()
+
+            # newwindow = tk.Tk()
+            # newwindow.mainloop()
+            
+
     
     def manage_size(self, event):
         self.shot_area_cnv.config(height=int(self.root.winfo_height()*0.9))
@@ -77,6 +80,7 @@ class gui():
 
     def refresh_cnv(self):
         self.shot_area_cnv.delete('all')
+        # pass
 
     def on_closing(self):
         if os.path.exists(self.curr_img):
