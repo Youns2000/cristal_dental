@@ -1,0 +1,9 @@
+tk
+mss
+numpy
+fpdf
+matplotlib
+Pillow
+opencv-python
+pymupdf
+pyinstaller

@@ -25,7 +25,9 @@ class HttpHandler(BaseHTTPRequestHandler):
                 return
         
         self.send_response(200)
-        self.send_header("Content-type", "text/html")
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
         self.end_headers()
         self.wfile.write(bytes("<body>", "utf-8"))
         with open('json_data.json', 'w') as outfile:

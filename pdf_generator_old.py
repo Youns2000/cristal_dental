@@ -8,14 +8,10 @@ except ImportError:
     from Tkinter import filedialog
 
 # from tkPDFViewer import tkPDFViewer as pdf
-# from fpdf import FPDF
-
+from fpdf import FPDF
 from tkinter.scrolledtext import ScrolledText
 import fitz
 import os
-from reportlab.pdfgen import canvas
-from reportlab.lib import utils
-from PyPDF2 import PdfFileWriter, PdfFileReader
 
 
 class PDFViewer(ScrolledText):
@@ -37,39 +33,18 @@ class MyPDF:
         self.x = self.scale_x.get()
         self.y = self.scale_y.get()
         self.size = self.scale_size.get()
-        self.rotate = self.scale_rotate.get()
 
-        img = utils.ImageReader('./pics.png')
-        img_width, img_height = img.getSize()
-        aspect = img_height / float(img_width)
+        pdf = FPDF()
+        pdf.add_page()
 
-        c = canvas.Canvas(self.curr_pdf)
         if self.bg_image_path:
-            try:
-                c.drawImage(self.bg_image_path, 0, 0)
-            except OSError:
-                tk.messagebox.showerror(
-                    "Erreur image", "Le chemin pour l'image de font n'existe pas. Veillez reconfigurez l'image de font.")
-        c.saveState()
-        c.rotate(self.rotate)
-        c.drawImage('./pics.png', self.x, self.y,
-                    self.size, preserveAspectRatio=True)
-        c.restoreState()
-        c.save()
+            pdf.image(self.bg_image_path, 0, 0)
+        pdf.image('./pics.png', self.x, self.y, self.size)
+        pdf.output(self.curr_pdf, 'F')
         self.pdf.show(self.curr_pdf)
-        # self.c
-        # self.c.showPage()
-        # self.c.save()
-        # pdf = FPDF()
-        # pdf.add_page()
-
-        # if self.bg_image_path:
-        #     pdf.image(self.bg_image_path, 0, 0)
-        # pdf.image('./pics.png', self.x, self.y, self.size)
-        # pdf.output(self.curr_pdf, 'F')
-        # self.pdf.show(self.curr_pdf)
 
     def on_closing(self):
+        print(self.bg_image_path)
         self.set_config()
         if os.path.exists(self.curr_pdf):
             os.remove(self.curr_pdf)
@@ -102,9 +77,10 @@ class MyPDF:
         self.pdfwin.destroy()
 
     def onConfig(self):
-        self.bg_image_path = filedialog.askopenfilename(initialdir=self.bg_image_path, title="Open file", filetypes=(
+        self.bg_image_path = filedialog.askopenfilename(title="Open file", filetypes=(
             ("Images", "*.png;*.jpg;*.gif"), ("All files", "*.*")))
-
+        print(type(self.bg_image_path))
+        print(self.bg_image_path)
         self.set_config()
         self.pdf_generate()
 
@@ -113,16 +89,15 @@ class MyPDF:
             tk.messagebox.showerror(
                 "Erreur image", "Vous n'avez pris de photo!")
             return
-
-        ################ SET CONFIG VARS ####################
         self.x = 10
         self.y = 10
         self.size = 10
-        self.rotate = 0
-        self.bg_image_path = ""
+        self.bg_image_path = "./"
         self.curr_pdf = "./tmp.pdf"
         self.finalfolder = ""
         self.get_config()
+
+        print(self.bg_image_path)
 
         self.pdfwin = tk.Toplevel()
         self.pdfwin.attributes('-topmost', 1)
@@ -147,36 +122,29 @@ class MyPDF:
 
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
         tk.Grid.rowconfigure(self.frame, 1, weight=1)
-        self.scale_x = tk.ttk.Scale(self.pdfwin, value=self.x, from_=0, to=300,
+        self.scale_x = tk.ttk.Scale(self.pdfwin, value=self.x, from_=0, to=200,
                                     orient="horizontal", command=self.pdf_generate,
                                     takefocus=False)
         self.scale_x.grid(row=1, column=0)
 
         tk.Grid.columnconfigure(self.frame, 1, weight=1)
-        self.scale_y = tk.ttk.Scale(self.pdfwin, value=self.y, from_=800, to=-250,
+        self.scale_y = tk.ttk.Scale(self.pdfwin, value=self.y, from_=0, to=219,
                                     orient="vertical", command=self.pdf_generate,
                                     takefocus=False)
         self.scale_y.grid(row=0, column=1, rowspan=2)
 
         tk.Grid.rowconfigure(self.frame, 2, weight=1)
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
-        self.scale_size = tk.ttk.Scale(self.pdfwin, value=self.size, from_=50, to=600, variable=self.size,
+        self.scale_size = tk.ttk.Scale(self.pdfwin, value=self.size, from_=10, to=200, variable=self.size,
                                        orient="horizontal", command=self.pdf_generate,
                                        takefocus=False)
         self.scale_size.grid(row=2, column=0)
 
         tk.Grid.rowconfigure(self.frame, 3, weight=1)
-        tk.Grid.columnconfigure(self.frame, 0, weight=1)
-        self.scale_rotate = tk.ttk.Scale(self.pdfwin, value=self.rotate, from_=0, to=360, variable=self.rotate,
-                                         orient="horizontal", command=self.pdf_generate,
-                                         takefocus=False)
-        self.scale_rotate.grid(row=3, column=0)
-
-        tk.Grid.rowconfigure(self.frame, 4, weight=1)
         self.retake_button = tk.ttk.Button(
             self.pdfwin, text="Enregistrer", command=self.folder_selection)
         self.retake_button.grid(
-            row=4, column=0, columnspan=2, sticky=tk.S+tk.E+tk.W)
+            row=3, column=0, columnspan=2, sticky=tk.S+tk.E+tk.W)
 
         self.pdf_generate()
 

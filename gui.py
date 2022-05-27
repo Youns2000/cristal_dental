@@ -1,56 +1,61 @@
-import tkinter as tk
+try:
+    import tkinter as tk
+except ImportError:
+    import Tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from pdf_generator import MyPDF
 import mss
-import mss.tools
-import time
 import os
-import server
-from threading import Thread
 
-class gui():
+class gui(tk.Tk):
     def __init__(self):
         self.curr_img = "./pics.png"
-
-        self.root = tk.Tk()
-        self.refresh_icon = tk.PhotoImage(file="./refresh.png")
-        self.root.title('Polaris-Implants')
-        self.root.minsize(500, 200)
-        window_width = 1100
-        window_height = 500
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        center_x = int(screen_width/2 - window_width / 2)
-        center_y = int(screen_height/2 - window_height / 2)
-        self.root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-        self.root.attributes('-topmost', 1)
-        self.root.wm_attributes('-transparentcolor','grey')
-        self.root.update_idletasks()
-        self.init_mss()
-        # root.iconbitmap('./logo.ico')
-        # root.attributes('-alpha',0.5)
-
-        self.shot_area_cnv = tk.Canvas(self.root, background="grey")
-        self.shot_area_cnv.pack(fill=tk.X, side=tk.TOP)
-        self.buttons_cnv = tk.Canvas(self.root)
-        self.buttons_cnv.pack(fill=tk.X, side=tk.BOTTOM)
-
-        self.root.update()
-
-        # print(self.buttons_cnv.winfo_width())
-        self.shot_button = ttk.Button(self.buttons_cnv,  width=(self.buttons_cnv.winfo_width()//2), text ="Take a shot", command =self.shot)
-        self.shot_button.pack(side=tk.LEFT, expand=True)
         
-        self.retake_button = tk.Button(self.buttons_cnv, image=self.refresh_icon, width=int(self.buttons_cnv.winfo_height()//2), text ="Retake a shot", command = self.refresh_cnv)
-        self.retake_button.pack(side=tk.RIGHT, expand=True)
+        self.root = tk.Tk()
+
+        self.mypdf = MyPDF()
+        tk.Grid.rowconfigure(self.root, 0, weight=1)
+        tk.Grid.columnconfigure(self.root, 0, weight=1)
+        self.root.minsize(300, 200)
+        self.root.title('Polaris-Implants')
+        self.root.wm_attributes('-transparentcolor','red')
+        self.root.attributes('-topmost', 1)
+
+        self.frame=tk.Frame(self.root)
+        self.frame.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        tk.Grid.rowconfigure(self.frame, 0, weight=1)
+        tk.Grid.columnconfigure(self.frame, 0, weight=1)
+        self.shot_area_cnv = tk.Canvas(self.frame, background="red")
+        self.shot_area_cnv.grid(row=0, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        tk.Grid.columnconfigure(self.frame, 0, weight=1)
+        self.shot_button = tk.Button(self.frame, text ="Take a shot", command =self.shot)
+        self.shot_button.grid(row=1, column=0, sticky=tk.S+tk.E+tk.W)  
+
+        tk.Grid.columnconfigure(self.frame, 1, weight=1)
+        self.retake_button = tk.Button(self.frame, text ="Retake a shot", command = self.refresh_cnv)
+        self.retake_button.grid(row=1, column=1, sticky=tk.S+tk.E+tk.W)  
+
+        tk.Grid.columnconfigure(self.frame, 2, weight=1)
+        self.retake_button = tk.Button(self.frame, text ="PDF", command = self.mypdf.show_pdf)
+        self.retake_button.grid(row=1, column=2, sticky=tk.S+tk.E+tk.W)  
+
+        self.init_mss()
 
     def init_mss(self):
         with mss.mss() as sct:
             sct.shot(mon=-1, output=self.curr_img)
         if os.path.exists(self.curr_img):
             os.remove(self.curr_img)
+    
+    def refresh_cnv(self):
+        self.shot_area_cnv.delete('all')
+        if os.path.exists(self.curr_img):
+            os.remove(self.curr_img)
 
-    def shot(self, e = None):
+    def shot(self):
         with mss.mss() as sct:
             monitor = {
                 "top": self.root.winfo_y() + 35,
@@ -59,7 +64,6 @@ class gui():
                 "height": int(self.root.winfo_height()*0.9)
             }
             sct_img = sct.grab(monitor)
-            # mss.tools.to_png(sct_img.rgb, sct_img.size, output=CURR_IMG)
             img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
             image = ImageTk.PhotoImage(img)
 
@@ -67,30 +71,14 @@ class gui():
 
             self.shot_area_cnv.create_image(0,0, anchor = tk.NW, image=image)
             self.shot_area_cnv.image = image
-            self.shot_area_cnv.pack()
-
-            # newwindow = tk.Tk()
-            # newwindow.mainloop()
-            
-
-    
-    def manage_size(self, event):
-        self.shot_area_cnv.config(height=int(self.root.winfo_height()*0.9))
-        self.buttons_cnv.config(width=int(self.root.winfo_height()*0.1))
-
-    def refresh_cnv(self):
-        self.shot_area_cnv.delete('all')
-        # pass
 
     def on_closing(self):
         if os.path.exists(self.curr_img):
             os.remove(self.curr_img)
+        if os.path.exists('./fpdf.pdf'):
+            os.remove('./fpdf.pdf')
         self.root.destroy()
 
-    def gui_main(self):
-        # server.run_flask()
-        # Thread(target=server.run_flask(), daemon=True).start()
-        self.shot_area_cnv.bind("<Configure>", self.manage_size)
-        self.root.bind('<KeyPress>', self.shot)
+    def start(self):
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
