@@ -7,3 +7,7 @@ Pillow
 opencv-python
 pymupdf
 pyinstaller
+reportlab
+pypdf2
+scikit-image
+opencv-python

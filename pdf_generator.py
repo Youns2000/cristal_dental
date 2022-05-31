@@ -16,6 +16,8 @@ import os
 from reportlab.pdfgen import canvas
 from reportlab.lib import utils
 from PyPDF2 import PdfFileWriter, PdfFileReader
+from PIL import Image, ImageTk
+import img
 
 
 class PDFViewer(ScrolledText):
@@ -108,6 +110,10 @@ class MyPDF:
         self.set_config()
         self.pdf_generate()
 
+    def rotate_(self, e=None):
+        img.rotate_img('./pics.png', self.rotate, './pics.png')
+        self.pdf_generate()
+
     def show_pdf(self):
         if not os.path.exists('pics.png'):
             tk.messagebox.showerror(
@@ -168,7 +174,7 @@ class MyPDF:
         tk.Grid.rowconfigure(self.frame, 3, weight=1)
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
         self.scale_rotate = tk.ttk.Scale(self.pdfwin, value=self.rotate, from_=0, to=360, variable=self.rotate,
-                                         orient="horizontal", command=self.pdf_generate,
+                                         orient="horizontal", command=self.rotate_,
                                          takefocus=False)
         self.scale_rotate.grid(row=3, column=0)
 
